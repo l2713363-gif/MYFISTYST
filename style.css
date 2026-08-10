@@ -1,0 +1,404 @@
+/* ==========================================================================
+   1. 全局變數與基礎設定 (Global Variables & Reset)
+   ========================================================================== */
+:root {
+    --bg-main: #0b0f19;          /* 暗夜神祕深藍背景 */
+    --bg-card: #161d30;          /* 國家盒模組深藍灰 */
+    --text-primary: #e2e8f0;     /* 羊皮紙白主文字 */
+    --text-muted: #94a3b8;        /* 陰影灰次要文字 */
+    
+    /* 陣營代表色 */
+    --color-pirate: #38bdf8;     /* 臨淵/北速海：深海與火砲冰藍 */
+    --color-alliance: #34d399;   /* 流光/鹽湖/幽谷：荒漠與林地翡翠綠 */
+    --color-ritual: #fbbf24;     /* 禮圈部公國：腐敗與內耗宮廷金 */
+    --color-theocracy: #f87171;  /* 十字神權：異端審判與狂信血紅 */
+    --color-tech: #a78bfa;       /* 林地八省：天工火器神祕紫 */
+    --color-neutral: #cbd5e1;    /* 中立/一般：鋼鐵灰 */
+    
+    /* 邊框與陰影 */
+    --border-glow: rgba(56, 189, 248, 0.2);
+    --shadow-soft: inset 0 0 20px rgba(0, 0, 0, 0.6), 0 10px 30px rgba(0, 0, 0, 0.7);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    line-height: 1.6;
+    padding: 2rem;
+}
+
+/* ==========================================================================
+   2. 全局冷戰與醫療/工匠統計看板 (Global Cold War Dashboard)
+   ========================================================================== */
+.global-coldwar-board {
+    background: radial-gradient(circle at top, #1e293b, var(--bg-card));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 3rem;
+    box-shadow: var(--shadow-soft);
+}
+
+.global-coldwar-board h2 {
+    font-size: 1.8rem;
+    text-align: center;
+    color: #ffffff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.5rem;
+}
+
+/* 侯爵軍功特遣限制區塊 */
+.rules-section {
+    background: rgba(248, 113, 113, 0.05);
+    border-left: 4px solid var(--color-theocracy);
+    padding: 1.2rem;
+    border-radius: 4px;
+    margin-bottom: 2rem;
+}
+
+.rules-section h3 {
+    color: var(--color-theocracy);
+    margin-bottom: 0.5rem;
+}
+
+/* 雙欄統計統計盒 */
+.statistics-flex {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.stat-box {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.stat-box h4 {
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.3rem;
+}
+
+.stat-box ul {
+    list-style: none;
+}
+
+.stat-box li {
+    margin-bottom: 0.6rem;
+    color: var(--text-muted);
+}
+
+.stat-box strong {
+    color: #ffffff;
+}
+
+/* ==========================================================================
+   3. 地圖互動區塊 (Interactive Map Wrapper)
+   ========================================================================== */
+.map-container {
+    display: block !important;
+    margin: 0 auto 3rem auto !important; /* 🟢 置中對齊，並與下方的控制台拉開舒適距離 */
+    background: #0d1321;               /* 戰略地圖深色底 */
+    padding: 1.5rem !important;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: var(--shadow-soft);
+    
+    /* 🟢 核心修正：限制地圖的最大顯示寬度，防止在大螢幕上被無限拉大而模糊 */
+    width: 100% !important;
+    max-width: 900px !important;       
+}
+
+.map-container img {
+    display: block !important;
+    margin: 0 auto !important;
+    width: auto !important;            /* 🟢 防止強制拉伸變形 */
+    max-width: 100% !important;        /* 🟢 自動適應容器寬度 */
+    height: auto !important;           /* 🟢 維持地圖原圖比例，不歪斜 */
+    border-radius: 8px;
+    transition: filter 0.3s ease, transform 0.3s ease;
+    
+    /* 確保縮放地圖時，線條與文字依然銳利不模糊 */
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+}
+
+/* 懸停時的微光特效 */
+.map-container:hover img {
+    filter: brightness(1.08) contrast(1.02);
+    transform: scale(1.005); /* 🟢 微幅放大增加互動質感 */
+}
+
+/* ==========================================================================
+   4. 國家卡片流格佈局 (Country Card Grid & Styling)
+   ========================================================================== */
+.countries-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 1.2rem !important;
+    width: 100% !important;
+    max-width: none !important;
+}
+
+/* 📱 手機與平板的響應式優化 (防止在小螢幕上被擠扁) */
+@media (max-width: 1024px) {
+    .countries-grid {
+        grid-template-columns: repeat(2, 1fr); /* 平板改為一行 2 張 */
+    }
+}
+
+@media (max-width: 768px) {
+    .countries-grid {
+        grid-template-columns: 1fr; /* 手機直向改為一行 1 張 */
+    }
+}
+
+/* 國家基礎卡片 */
+.rank-block {
+    background-color: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: var(--shadow-soft);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+/* 卡片上方微光特效 */
+.rank-block::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--color-neutral);
+    transition: all 0.3s ease;
+}
+
+.rank-block h3 {
+    font-size: 1.6rem;
+    margin-bottom: 1rem;
+    color: #ffffff;
+    letter-spacing: 1px;
+}
+
+.rank-block p, .rank-block li {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+}
+
+.rank-block p strong {
+    color: #ffffff;
+}
+
+.rank-block ul {
+    list-style: none;
+    margin: 0.5rem 0 1.5rem 0;
+    padding-left: 0.5rem;
+}
+
+.rank-block ul li {
+    position: relative;
+    padding-left: 1.2rem;
+    margin-bottom: 0.4rem;
+}
+
+.rank-block ul li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* 超連結樣式 (盟友跳轉) */
+.rank-block a {
+    color: var(--color-pirate);
+    text-decoration: none;
+    border-bottom: 1px dashed var(--color-pirate);
+    transition: color 0.2s;
+}
+
+.rank-block a:hover {
+    color: #ffffff;
+    border-bottom-style: solid;
+}
+
+/* ==========================================================================
+   5. 陣營專屬動態特效 (Faction Specific Colors & Hover Effects)
+   ========================================================================== */
+
+/* 懸停通用放大與發光 */
+.rank-block:hover {
+    transform: translateY(-5px);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* 1. 官方海盜組 (臨淵、北速海) */
+.rank-block[id="臨淵王國"]::before, 
+.rank-block[id="北速海諸群島王國"]::before {
+    background: var(--color-pirate);
+}
+.rank-block[id="臨淵王國"]:hover, 
+.rank-block[id="北速海諸群島王國"]:hover {
+    box-shadow: 0 15px 35px rgba(56, 189, 248, 0.15);
+    border-color: var(--color-pirate);
+}
+
+/* 2. 中部鐵三角銷贓線 (流光、鹽湖、幽谷) */
+.rank-block[id="流光王國"]::before, 
+.rank-block[id="鹽湖諸部落聯合"]::before,
+.rank-block[id="幽谷大公國"]::before {
+    background: var(--color-alliance);
+}
+.rank-block[id="流光王國"]:hover, 
+.rank-block[id="鹽湖諸部落聯合"]:hover,
+.rank-block[id="幽谷大公國"]:hover {
+    box-shadow: 0 15px 35px rgba(52, 211, 153, 0.15);
+    border-color: var(--color-alliance);
+}
+
+/* 3. 禮圈部公國同盟 (衛英、赫連、百花、臨海) */
+.rank-block[id="衛英大公國"]::before, 
+.rank-block[id="赫連大公國"]::before,
+.rank-block[id="百花大公國"]::before,
+.rank-block[id="臨海大公國"]::before {
+    background: var(--color-ritual);
+}
+.rank-block[id="衛英大公國"]:hover, 
+.rank-block[id="赫連大公國"]:hover,
+.rank-block[id="百花大公國"]:hover,
+.rank-block[id="臨海大公國"]:hover {
+    box-shadow: 0 15px 35px rgba(251, 191, 36, 0.15);
+    border-color: var(--color-ritual);
+}
+
+/* 4. 十字教神權雙子星 (菲托斯、奧斯) */
+.rank-block[id="神聖菲托斯王國"]::before, 
+.rank-block[id="神聖奧斯王國"]::before {
+    background: var(--color-theocracy);
+}
+.rank-block[id="神聖菲托斯王國"]:hover, 
+.rank-block[id="神聖奧斯王國"]:hover {
+    box-shadow: 0 15px 35px rgba(248, 113, 113, 0.15);
+    border-color: var(--color-theocracy);
+}
+
+/* 5. 工業與火器重鎮 (林地八省) */
+.rank-block[id="林地八省聯合王國"]::before {
+    background: var(--color-tech);
+}
+.rank-block[id="林地八省聯合王國"]:hover {
+    box-shadow: 0 15px 35px rgba(167, 139, 250, 0.15);
+    border-color: var(--color-tech);
+}
+
+/* ==========================================================================
+   6. 特殊法律法令嵌套清單縮排修正
+   ========================================================================== */
+.rank-block ul ul {
+    margin: 0.5rem 0 0.5rem 0;
+    padding-left: 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    padding: 0.8rem;
+    border-left: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.rank-block ul ul li {
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+}
+
+.rank-block ul ul li::before {
+    content: '↳';
+    color: var(--color-pirate);
+}
+
+/* ==========================================================================
+   7. 卡片收起/展開 核心控制樣式 (Collapse & Expand Core)
+   ========================================================================== */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: 0.5rem 0;
+    user-select: none;
+}
+
+.card-header h3 {
+    margin-bottom: 0 !important; /* 移除原本的下邊距 */
+}
+
+.toggle-icon {
+    font-size: 1rem;
+    color: var(--text-muted);
+    transition: transform 0.3s ease;
+}
+
+/* 🟢 預設收起狀態：高度設為 0 並隱藏內容 */
+.card-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s ease, opacity 0.3s ease;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* 🟢 展開狀態：當 JavaScript 加上 .active 時，給予足夠高度使其滑動展開 */
+.rank-block.active .card-content {
+    max-height: 2500px !important; 
+    opacity: 1;
+    pointer-events: auto;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* 展開時箭頭自動旋轉 180 度 */
+.rank-block.active .toggle-icon {
+    transform: rotate(180deg);
+    color: #ffffff;
+}
+/* ==========================================================================
+   8. 微型化收合標籤 (Compact Unexpanded Cards)
+   ========================================================================== */
+
+/* 1. 縮小預設收合狀態的卡片體積 */
+.rank-block {
+    padding: 0.8rem 1.5rem !important; /* 🟢 壓低上下高度，原本是 2rem */
+    margin-bottom: 0.8rem !important;  /* 🟢 縮短卡片與卡片之間的間距 */
+    min-height: auto;
+}
+
+/* 2. 縮小收合時的國家標題字體 */
+.card-header h3 {
+    font-size: 1.15rem !important;     /* 🟢 讓未展開的國家名字更精緻小巧 */
+    font-weight: 500;
+    transition: font-size 0.3s ease, color 0.3s ease;
+}
+
+/* 3. 當卡片被點擊展開（Active）時，瞬間恢復大氣的排版與字體 */
+.rank-block.active {
+    padding: 2rem !important;          /* 🟢 展開後恢復原本的舒適大空間 */
+    margin-bottom: 2rem !important;    /* 🟢 展開後拉大與下一個國家的距離，凸顯焦點 */
+}
+
+.rank-block.active .card-header h3 {
+    font-size: 1.6rem !important;      /* 🟢 展開後標題放大回原本的霸氣大小 */
+    font-weight: bold;
+}
